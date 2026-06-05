@@ -1,0 +1,19 @@
+# Version control
+.git
+.gitignore
+
+# Go dependencies
+backend/vendor/
+
+# Node dependencies
+frontend/node_modules/
+
+# Build outputs
+frontend/dist/
+frontend/build/
+backend/bin/
+
+# Logs and environment config
+*.log*
+.env*
+.local

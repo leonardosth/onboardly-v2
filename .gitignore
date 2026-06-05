@@ -1,0 +1,27 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Go Backend
+backend/bin/
+backend/vendor/
+*.exe
+*.test
+*.out
+
+# Node.js / Vue Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+*.log
+.env*
+!.env.example
+.local
