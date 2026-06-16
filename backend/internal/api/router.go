@@ -53,15 +53,18 @@ func NewRouter(cfg *config.Config) *chi.Mux {
 			// Admin-only deletion endpoint
 			r.With(auth.RequireRole("Admin")).Delete("/clients/{id}", client.DeleteClientHandler)
 
+			// Meeting routes
+			r.Get("/meetings", meeting.ListMeetingsHandler)
+			r.Get("/meetings/mine", meeting.ListMyMeetingsHandler)
+			r.Post("/meetings", meeting.CreateMeetingHandler)
+			r.Post("/meetings/{id}/complete", meeting.CompleteMeetingHandler)
+
 			// Project routes
 			r.Get("/projects", project.ListProjectsHandler)
 			r.Get("/projects/{id}", project.GetProjectHandler)
 			r.Post("/projects", project.CreateProjectHandler)
 			r.Put("/projects/{id}", project.UpdateProjectStatusHandler)
-
-			// Meeting routes
-			r.Get("/meetings", meeting.ListMeetingsHandler)
-			r.Post("/meetings", meeting.CreateMeetingHandler)
+			r.Post("/projects/{id}/finalize", project.FinalizeProjectHandler)
 
 			// User routes (Admin only)
 			r.Group(func(r chi.Router) {

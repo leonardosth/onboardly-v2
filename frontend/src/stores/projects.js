@@ -65,6 +65,26 @@ export const useProjectsStore = defineStore('projects', {
         this.loading = false;
       }
     },
+    async updateStatus(id, status) {
+      this.loading = true;
+      this.error = null;
+      try {
+        const updated = await projectService.updateProject(id, { status });
+        const index = this.projects.findIndex(p => p.id === id);
+        if (index !== -1) {
+          this.projects[index] = updated;
+        }
+        if (this.currentProject && this.currentProject.id === id) {
+          this.currentProject = updated;
+        }
+        return updated;
+      } catch (err) {
+        this.error = err.response?.data?.error || 'Erro ao atualizar status do projeto';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
     async removeProject(id) {
       this.loading = true;
       this.error = null;
@@ -76,6 +96,26 @@ export const useProjectsStore = defineStore('projects', {
         }
       } catch (err) {
         this.error = err.response?.data?.error || 'Erro ao excluir projeto';
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+    async finalizeProject(id) {
+      this.loading = true;
+      this.error = null;
+      try {
+        const updated = await projectService.finalizeProject(id);
+        const index = this.projects.findIndex(p => p.id === id);
+        if (index !== -1) {
+          this.projects[index] = updated;
+        }
+        if (this.currentProject && this.currentProject.id === id) {
+          this.currentProject = updated;
+        }
+        return updated;
+      } catch (err) {
+        this.error = err.response?.data?.error || 'Erro ao finalizar projeto';
         throw err;
       } finally {
         this.loading = false;

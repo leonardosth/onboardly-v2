@@ -12,6 +12,7 @@ const ClientDetail = () => import('../pages/ClientDetail.vue');
 const ProjectDetail = () => import('../pages/ProjectDetail.vue');
 const ProjectsList = () => import('../pages/ProjectsList.vue');
 const UsersList = () => import('../pages/UsersList.vue');
+const MeetingsList = () => import('../pages/MeetingsList.vue');
 
 const routes = [
   {
@@ -37,6 +38,7 @@ const routes = [
       { path: 'clients/:id', name: 'ClientDetail', component: ClientDetail },
       { path: 'projects', name: 'ProjectsList', component: ProjectsList },
       { path: 'projects/:id', name: 'ProjectDetail', component: ProjectDetail },
+      { path: 'meetings', name: 'MeetingsList', component: MeetingsList },
       { path: 'users', name: 'UsersList', component: UsersList, meta: { adminOnly: true } }
     ]
   },

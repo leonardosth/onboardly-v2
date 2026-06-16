@@ -20,6 +20,10 @@
           <span class="nav-icon">📁</span>
           Projetos
         </router-link>
+        <router-link to="/meetings" class="nav-item" :class="{ active: $route.path.startsWith('/meetings') }">
+          <span class="nav-icon">📅</span>
+          Agendas
+        </router-link>
         <router-link v-if="auth.isAdmin" to="/users" class="nav-item" :class="{ active: $route.path.startsWith('/users') }">
           <span class="nav-icon">👥</span>
           Usuários

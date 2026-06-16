@@ -29,6 +29,53 @@ func GetAllClients() ([]Client, error) {
 	return clients, nil
 }
 
+// GetClientsWithDetails returns a list of clients including aggregated project and meeting details.
+func GetClientsWithDetails() ([]ClientWithDetails, error) {
+	query := `
+		SELECT c.id, c.name, c.cnpj, c.created_at,
+		       p.name AS project_name, p.status AS project_status, p.is_active,
+		       u.email AS responsible,
+		       COUNT(m.id) FILTER (WHERE m.status = 'completed') AS completed_agendas,
+		       COUNT(m.id) AS total_agendas
+		FROM clients c
+		LEFT JOIN LATERAL (
+		    SELECT * FROM projects
+		    WHERE client_id = c.id
+		    ORDER BY created_at DESC LIMIT 1
+		) p ON TRUE
+		LEFT JOIN meetings m ON m.project_id = p.id
+		LEFT JOIN LATERAL (
+		    SELECT analyst_id FROM meetings
+		    WHERE project_id = p.id AND analyst_id IS NOT NULL
+		    ORDER BY scheduled_at DESC LIMIT 1
+		) latest_m ON TRUE
+		LEFT JOIN users u ON u.id = latest_m.analyst_id
+		GROUP BY c.id, c.name, c.cnpj, c.created_at, p.name, p.status, p.is_active, u.email
+		ORDER BY c.name ASC
+	`
+	rows, err := db.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var clients []ClientWithDetails
+	for rows.Next() {
+		var c ClientWithDetails
+		err := rows.Scan(
+			&c.ID, &c.Name, &c.CNPJ, &c.CreatedAt,
+			&c.ProjectName, &c.ProjectStatus, &c.ProjectIsActive,
+			&c.Responsible, &c.CompletedAgendas, &c.TotalAgendas,
+		)
+		if err != nil {
+			return nil, err
+		}
+		clients = append(clients, c)
+	}
+
+	return clients, nil
+}
+
 // GetClientByID retrieves a single client by UUID.
 func GetClientByID(id string) (*Client, error) {
 	query := `SELECT id, name, cnpj, created_at, updated_at FROM clients WHERE id = $1`

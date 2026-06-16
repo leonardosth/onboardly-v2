@@ -13,10 +13,10 @@ func GetProjects(clientID string) ([]Project, error) {
 	var err error
 
 	if clientID != "" {
-		query := `SELECT id, client_id, name, status, is_active, created_at, updated_at FROM projects WHERE client_id = $1 ORDER BY created_at DESC`
+		query := `SELECT id, client_id, name, status, is_active, activated_at, created_at, updated_at FROM projects WHERE client_id = $1 ORDER BY created_at DESC`
 		rows, err = db.DB.Query(query, clientID)
 	} else {
-		query := `SELECT id, client_id, name, status, is_active, created_at, updated_at FROM projects ORDER BY created_at DESC`
+		query := `SELECT id, client_id, name, status, is_active, activated_at, created_at, updated_at FROM projects ORDER BY created_at DESC`
 		rows, err = db.DB.Query(query)
 	}
 
@@ -28,7 +28,7 @@ func GetProjects(clientID string) ([]Project, error) {
 	var projects []Project
 	for rows.Next() {
 		var p Project
-		err := rows.Scan(&p.ID, &p.ClientID, &p.Name, &p.Status, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
+		err := rows.Scan(&p.ID, &p.ClientID, &p.Name, &p.Status, &p.IsActive, &p.ActivatedAt, &p.CreatedAt, &p.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -40,9 +40,9 @@ func GetProjects(clientID string) ([]Project, error) {
 
 // GetProjectByID retrieves a single project by UUID.
 func GetProjectByID(id string) (*Project, error) {
-	query := `SELECT id, client_id, name, status, is_active, created_at, updated_at FROM projects WHERE id = $1`
+	query := `SELECT id, client_id, name, status, is_active, activated_at, created_at, updated_at FROM projects WHERE id = $1`
 	var p Project
-	err := db.DB.QueryRow(query, id).Scan(&p.ID, &p.ClientID, &p.Name, &p.Status, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
+	err := db.DB.QueryRow(query, id).Scan(&p.ID, &p.ClientID, &p.Name, &p.Status, &p.IsActive, &p.ActivatedAt, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("project not found")
@@ -66,9 +66,9 @@ func CreateProject(clientID, name string) (*Project, error) {
 		return nil, errors.New("associated client not found")
 	}
 
-	query := `INSERT INTO projects (client_id, name, status, is_active) VALUES ($1, $2, 'Backlog', TRUE) RETURNING id, status, is_active, created_at, updated_at`
+	query := `INSERT INTO projects (client_id, name, status, is_active) VALUES ($1, $2, 'Backlog', TRUE) RETURNING id, status, is_active, activated_at, created_at, updated_at`
 	p := &Project{ClientID: clientID, Name: name}
-	err = db.DB.QueryRow(query, p.ClientID, p.Name).Scan(&p.ID, &p.Status, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
+	err = db.DB.QueryRow(query, p.ClientID, p.Name).Scan(&p.ID, &p.Status, &p.IsActive, &p.ActivatedAt, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -85,12 +85,27 @@ func UpdateProjectStatus(id, status string) (*Project, error) {
 	// is_active is false only when status is Go-Live
 	isActive := status != "Go-Live"
 
-	query := `UPDATE projects SET status = $1, is_active = $2, updated_at = NOW() WHERE id = $3 RETURNING client_id, name, created_at, updated_at`
+	query := `UPDATE projects SET status = $1, is_active = $2, updated_at = NOW() WHERE id = $3 RETURNING client_id, name, activated_at, created_at, updated_at`
 	p := &Project{ID: id, Status: status, IsActive: isActive}
-	err := db.DB.QueryRow(query, p.Status, p.IsActive, p.ID).Scan(&p.ClientID, &p.Name, &p.CreatedAt, &p.UpdatedAt)
+	err := db.DB.QueryRow(query, p.Status, p.IsActive, p.ID).Scan(&p.ClientID, &p.Name, &p.ActivatedAt, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 
 	return p, nil
+}
+
+// FinalizeProject sets project status to Go-Live.
+func FinalizeProject(id string) (*Project, error) {
+	// Check current state
+	p, err := GetProjectByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if p.Status == "Go-Live" {
+		return nil, errors.New("project is already finalized")
+	}
+
+	return UpdateProjectStatus(id, "Go-Live")
 }

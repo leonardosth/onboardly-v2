@@ -26,3 +26,8 @@ export const deleteProject = async (id) => {
   const response = await axios.delete(`${API_URL}/projects/${id}`);
   return response.data;
 };
+
+export const finalizeProject = async (id) => {
+  const response = await axios.post(`${API_URL}/projects/${id}/finalize`);
+  return response.data;
+};

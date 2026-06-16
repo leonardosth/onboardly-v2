@@ -55,11 +55,6 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('email');
       
       delete axios.defaults.headers.common['Authorization'];
-    },
-    initializeAuth() {
-      if (this.token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-      }
     }
   }
 });

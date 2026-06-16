@@ -83,3 +83,18 @@ func UpdateProjectStatusHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(p)
 }
+
+// FinalizeProjectHandler sets a project status to Go-Live (finalized).
+func FinalizeProjectHandler(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	p, err := FinalizeProject(id)
+	if err != nil {
+		apierr.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(p)
+}

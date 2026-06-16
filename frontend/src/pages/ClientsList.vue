@@ -40,15 +40,50 @@
       <div v-else-if="clientsStore.clients?.length === 0" class="empty-container">
         Nenhum cliente cadastrado.
       </div>
-      <div v-else class="clients-grid">
-        <div v-for="client in clientsStore.clients" :key="client.id" class="client-card">
-          <h3>{{ client.name }}</h3>
-          <p class="cnpj-text"><strong>CNPJ:</strong> {{ client.cnpj }}</p>
-          <div class="card-footer">
-            <router-link :to="'/clients/' + client.id" class="details-btn">Ver Detalhes</router-link>
-            <button v-if="auth.isAdmin" class="delete-btn" @click="handleDelete(client.id)">Excluir</button>
-          </div>
-        </div>
+      <div v-else class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nome do Cliente</th>
+              <th>CNPJ</th>
+              <th>Projeto</th>
+              <th>Responsável</th>
+              <th>Status</th>
+              <th>Situação</th>
+              <th>Agendas Realizadas</th>
+              <th class="actions-header">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="client in clientsStore.clients" :key="client.id">
+              <td class="client-name" :title="client.name">{{ client.name }}</td>
+              <td class="cnpj-cell">{{ client.cnpj }}</td>
+              <td class="project-cell" :title="client.project_name || ''">{{ client.project_name || '—' }}</td>
+              <td class="responsible-cell" :title="client.responsible || ''">{{ client.responsible || '—' }}</td>
+              <td>
+                <span v-if="client.project_status" :class="['status-badge', getStatusClass(client.project_status)]">
+                  {{ client.project_status }}
+                </span>
+                <span v-else>—</span>
+              </td>
+              <td>
+                <div v-if="client.project_is_active !== null" class="situacao-indicator">
+                  <span :class="['dot', client.project_is_active ? 'dot-active' : 'dot-inactive']"></span>
+                  {{ client.project_is_active ? 'Ativo' : 'Inativo' }}
+                </div>
+                <span v-else>—</span>
+              </td>
+              <td class="agendas-cell">
+                <span v-if="client.total_agendas > 0">{{ client.completed_agendas }} / {{ client.total_agendas }}</span>
+                <span v-else>—</span>
+              </td>
+              <td class="actions-cell">
+                <router-link :to="'/clients/' + client.id" class="details-btn" title="Ver Detalhes">🔍</router-link>
+                <button v-if="auth.isAdmin" class="delete-btn" @click="handleDelete(client.id)" title="Excluir">🗑️</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -109,6 +144,15 @@ const handleDelete = async (id) => {
     } catch (err) {
       alert('Erro ao excluir cliente.');
     }
+  }
+};
+
+const getStatusClass = (status) => {
+  switch (status) {
+    case 'Backlog': return 'status-backlog';
+    case 'Em andamento': return 'status-progress';
+    case 'Go-Live': return 'status-golive';
+    default: return '';
   }
 };
 </script>
@@ -219,61 +263,139 @@ const handleDelete = async (id) => {
   background: #0ea5e9;
 }
 
-.clients-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-.client-card {
+.table-container {
+  overflow-x: auto;
   background: rgba(30, 41, 59, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 12px;
-  padding: 1.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.client-card h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1.25rem;
-  color: #f8fafc;
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
 }
 
-.cnpj-text {
+.data-table th, .data-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.data-table th {
+  background: rgba(15, 23, 42, 0.6);
   color: #94a3b8;
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
-}
-
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.details-btn {
-  color: #38bdf8;
-  text-decoration: none;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.client-name {
+  font-weight: 600;
+  color: #f8fafc;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-cell, .responsible-cell {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #cbd5e1;
+}
+
+.cnpj-cell, .agendas-cell {
+  color: #94a3b8;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-backlog {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.status-progress {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.status-golive {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.situacao-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #cbd5e1;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-active {
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+}
+
+.dot-inactive {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.actions-header {
+  text-align: right;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.details-btn, .delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  text-decoration: none;
+  font-size: 1.1rem;
 }
 
 .details-btn:hover {
-  text-decoration: underline;
-}
-
-.delete-btn {
-  background: transparent;
-  border: none;
-  color: #ef4444;
-  cursor: pointer;
-  font-weight: 600;
-  padding: 0;
+  background: rgba(56, 189, 248, 0.1);
 }
 
 .delete-btn:hover {
-  text-decoration: underline;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .loading-container, .error-container, .empty-container {

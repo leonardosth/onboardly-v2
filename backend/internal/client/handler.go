@@ -15,7 +15,7 @@ type clientRequest struct {
 
 // ListClientsHandler responds with all clients list.
 func ListClientsHandler(w http.ResponseWriter, r *http.Request) {
-	clients, err := GetAllClients()
+	clients, err := GetClientsWithDetails()
 	if err != nil {
 		apierr.WriteError(w, http.StatusInternalServerError, err.Error())
 		return
