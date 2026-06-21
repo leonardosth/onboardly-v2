@@ -63,9 +63,6 @@ func ListMyMeetingsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	status := r.URL.Query().Get("status")
-	if status == "" {
-		status = "completed"
-	}
 
 	meetings, err := GetMeetingsByAnalyst(analystID, status)
 	if err != nil {

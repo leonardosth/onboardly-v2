@@ -12,6 +12,7 @@
           <option value="scheduled">Agendadas</option>
           <option value="">Todas</option>
         </select>
+        <button class="new-meeting-btn" @click="showScheduleModal = true">📅 Nova Agenda</button>
       </div>
 
       <!-- List / Table -->
@@ -24,46 +25,35 @@
       <div v-else-if="meetingsStore.myMeetings?.length === 0" class="empty-container">
         Nenhuma agenda encontrada.
       </div>
-      <div v-else class="table-container">
-        <table class="meetings-table">
-          <thead>
-            <tr>
-              <th>Título</th>
-              <th>Cliente</th>
-              <th>Projeto</th>
-              <th>Data Agendada</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="meeting in meetingsStore.myMeetings" :key="meeting.id">
-              <td class="meeting-title">{{ meeting.title }}</td>
-              <td>{{ meeting.client_name || 'N/A' }}</td>
-              <td>
-                <router-link :to="'/projects/' + meeting.project_id" class="project-link">
-                  {{ meeting.project_name || 'N/A' }}
-                </router-link>
-              </td>
-              <td>{{ formatDateTime(meeting.scheduled_at) }}</td>
-              <td>
-                <span class="status-badge" :class="meeting.status.toLowerCase()">
-                  {{ meeting.status === 'completed' ? 'Concluída' : 'Agendada' }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-else class="calendar-container">
+        <FullCalendar :options="calendarOptions" />
       </div>
+
+      <MeetingScheduler 
+        v-if="showScheduleModal" 
+        @close="showScheduleModal = false"
+        @scheduled="onMeetingScheduled"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useMeetingsStore } from '../stores/meetings';
+import MeetingScheduler from '../components/MeetingScheduler.vue';
 
+import FullCalendar from '@fullcalendar/vue3';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import ptBrLocale from '@fullcalendar/core/locales/pt-br';
+
+const router = useRouter();
 const meetingsStore = useMeetingsStore();
-const statusFilter = ref('completed');
+const statusFilter = ref('');
+const showScheduleModal = ref(false);
 
 onMounted(() => {
   fetchMyMeetings();
@@ -77,18 +67,49 @@ const onStatusFilterChange = () => {
   fetchMyMeetings();
 };
 
-const formatDateTime = (dateStr) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return date.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+const onMeetingScheduled = () => {
+  fetchMyMeetings();
 };
+
+const handleEventClick = (info) => {
+  const projectId = info.event.extendedProps.projectId;
+  if (projectId) {
+    router.push('/projects/' + projectId);
+  }
+};
+
+const calendarOptions = computed(() => {
+  return {
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+    initialView: 'dayGridMonth',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek'
+    },
+    locale: ptBrLocale,
+    events: meetingsStore.myMeetings.map(m => ({
+      id: m.id,
+      title: `${m.client_name || 'N/A'} - ${m.title}`,
+      start: m.scheduled_at,
+      backgroundColor: m.status === 'completed' ? '#059669' : '#d97706',
+      borderColor: m.status === 'completed' ? '#047857' : '#b45309',
+      extendedProps: {
+        projectId: m.project_id
+      }
+    })),
+    eventClick: handleEventClick,
+    height: 'auto',
+    buttonText: {
+      today: 'Hoje',
+      month: 'Mês',
+      week: 'Semana'
+    }
+  };
+});
 </script>
+
+
 
 <style scoped>
 .dashboard-layout {
@@ -138,73 +159,97 @@ const formatDateTime = (dateStr) => {
   border-color: #38bdf8;
 }
 
-.table-container {
+.new-meeting-btn {
+  background: #38bdf8;
+  color: #0f172a;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.new-meeting-btn:hover {
+  background: #0ea5e9;
+}
+
+.calendar-container {
   background: rgba(30, 41, 59, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
 }
 
-.meetings-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-.meetings-table th, .meetings-table td {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.meetings-table th {
-  background: rgba(15, 23, 42, 0.4);
-  color: #94a3b8;
-  font-weight: 600;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.meetings-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.meetings-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.meeting-title {
-  font-weight: 500;
+/* FullCalendar customizations for dark theme */
+:deep(.fc) {
   color: #f8fafc;
 }
 
-.project-link {
-  color: #38bdf8;
-  text-decoration: none;
-  font-weight: 500;
+:deep(.fc-theme-standard td),
+:deep(.fc-theme-standard th) {
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
-.project-link:hover {
-  text-decoration: underline;
-}
-
-.status-badge {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 9999px;
+:deep(.fc-col-header-cell) {
+  background: rgba(15, 23, 42, 0.4);
+  color: #94a3b8;
+  padding: 0.5rem 0;
   font-weight: 600;
-  white-space: nowrap;
+  text-transform: uppercase;
+  font-size: 0.875rem;
 }
 
-.status-badge.completed {
-  background: rgba(52, 211, 153, 0.2);
-  color: #34d399;
+:deep(.fc-daygrid-day) {
+  background: rgba(30, 41, 59, 0.2);
 }
 
-.status-badge.scheduled {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
+:deep(.fc-daygrid-day-number) {
+  color: #cbd5e1;
+  padding: 0.5rem;
+}
+
+:deep(.fc-button-primary) {
+  background-color: #38bdf8 !important;
+  border-color: #38bdf8 !important;
+  color: #0f172a !important;
+  font-weight: 500 !important;
+  text-transform: capitalize !important;
+}
+
+:deep(.fc-button-primary:hover) {
+  background-color: #0284c7 !important;
+  border-color: #0284c7 !important;
+}
+
+:deep(.fc-button-primary:disabled) {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+:deep(.fc-button-active) {
+  background-color: #0ea5e9 !important;
+  border-color: #0ea5e9 !important;
+}
+
+:deep(.fc-event) {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+:deep(.fc-event:hover) {
+  opacity: 0.8;
 }
 
 .loading-container, .error-container, .empty-container {

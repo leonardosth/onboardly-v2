@@ -1,6 +1,7 @@
 package meeting
 
 import (
+	"database/sql"
 	"errors"
 	"time"
 
@@ -20,12 +21,16 @@ func GetMeetingsByProject(projectID string) ([]Meeting, error) {
 	for rows.Next() {
 		var m Meeting
 		var analystID sqlNullString
-		err := rows.Scan(&m.ID, &m.ProjectID, &analystID, &m.Title, &m.ScheduledAt, &m.Status, &m.CompletedAt, &m.NoShow, &m.CreatedAt)
+		var completedAt sql.NullTime
+		err := rows.Scan(&m.ID, &m.ProjectID, &analystID, &m.Title, &m.ScheduledAt, &m.Status, &completedAt, &m.NoShow, &m.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
 		if analystID.Valid {
 			m.AnalystID = analystID.String
+		}
+		if completedAt.Valid {
+			m.CompletedAt = &completedAt.Time
 		}
 		meetings = append(meetings, m)
 	}
@@ -62,8 +67,9 @@ func GetMeetingsByAnalyst(analystID, status string) ([]MeetingWithDetails, error
 	for rows.Next() {
 		var md MeetingWithDetails
 		var aID sqlNullString
+		var completedAt sql.NullTime
 		err := rows.Scan(
-			&md.ID, &md.ProjectID, &aID, &md.Title, &md.ScheduledAt, &md.Status, &md.CompletedAt, &md.NoShow, &md.CreatedAt,
+			&md.ID, &md.ProjectID, &aID, &md.Title, &md.ScheduledAt, &md.Status, &completedAt, &md.NoShow, &md.CreatedAt,
 			&md.ProjectName, &md.ClientName,
 		)
 		if err != nil {
@@ -71,6 +77,9 @@ func GetMeetingsByAnalyst(analystID, status string) ([]MeetingWithDetails, error
 		}
 		if aID.Valid {
 			md.AnalystID = aID.String
+		}
+		if completedAt.Valid {
+			md.CompletedAt = &completedAt.Time
 		}
 		meetings = append(meetings, md)
 	}
@@ -107,9 +116,13 @@ func CreateMeeting(projectID, analystID, title string, scheduledAt time.Time) (*
 		ScheduledAt: scheduledAt,
 	}
 
-	err = db.DB.QueryRow(query, m.ProjectID, analystVal, m.Title, m.ScheduledAt).Scan(&m.ID, &m.Status, &m.CompletedAt, &m.NoShow, &m.CreatedAt)
+	var completedAt sql.NullTime
+	err = db.DB.QueryRow(query, m.ProjectID, analystVal, m.Title, m.ScheduledAt).Scan(&m.ID, &m.Status, &completedAt, &m.NoShow, &m.CreatedAt)
 	if err != nil {
 		return nil, err
+	}
+	if completedAt.Valid {
+		m.CompletedAt = &completedAt.Time
 	}
 
 	return m, nil
@@ -120,13 +133,17 @@ func CompleteMeeting(meetingID string, activateClient bool) (*Meeting, bool, err
 	// Fetch meeting
 	var m Meeting
 	var analystID sqlNullString
+	var completedAt sql.NullTime
 	fetchQuery := `SELECT id, project_id, analyst_id, title, scheduled_at, status, completed_at, no_show, created_at FROM meetings WHERE id = $1`
-	err := db.DB.QueryRow(fetchQuery, meetingID).Scan(&m.ID, &m.ProjectID, &analystID, &m.Title, &m.ScheduledAt, &m.Status, &m.CompletedAt, &m.NoShow, &m.CreatedAt)
+	err := db.DB.QueryRow(fetchQuery, meetingID).Scan(&m.ID, &m.ProjectID, &analystID, &m.Title, &m.ScheduledAt, &m.Status, &completedAt, &m.NoShow, &m.CreatedAt)
 	if err != nil {
 		return nil, false, errors.New("meeting not found")
 	}
 	if analystID.Valid {
 		m.AnalystID = analystID.String
+	}
+	if completedAt.Valid {
+		m.CompletedAt = &completedAt.Time
 	}
 
 	if m.Status != "scheduled" {

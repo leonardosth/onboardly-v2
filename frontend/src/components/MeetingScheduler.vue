@@ -3,6 +3,13 @@
     <div class="modal">
       <h3>📅 Agendar Reunião</h3>
       <form @submit.prevent="submitSchedule">
+        <div class="form-group" v-if="!props.projectId">
+          <label for="project-select">Projeto</label>
+          <select id="project-select" v-model="selectedProjectId" required :disabled="loadingProjects">
+            <option value="" disabled>Selecione um projeto...</option>
+            <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+          </select>
+        </div>
         <div class="form-group">
           <label for="meeting-title">Assunto / Título</label>
           <input
@@ -50,30 +57,55 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useMeetingsStore } from '../stores/meetings';
 import { useAuthStore } from '../stores/auth';
+import * as projectService from '../services/project';
 
 const props = defineProps({
   projectId: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   }
 });
 
 const emit = defineEmits(['close', 'scheduled']);
 
+const selectedProjectId = ref(props.projectId);
 const title = ref('');
 const date = ref('');
 const timeVal = ref('');
 const error = ref('');
 const loading = ref(false);
 
+const projects = ref([]);
+const loadingProjects = ref(false);
+
 const meetingsStore = useMeetingsStore();
 const authStore = useAuthStore();
 
+onMounted(async () => {
+  if (!props.projectId) {
+    loadingProjects.value = true;
+    try {
+      projects.value = await projectService.getProjects() || [];
+    } catch (err) {
+      error.value = 'Erro ao carregar projetos.';
+    } finally {
+      loadingProjects.value = false;
+    }
+  }
+});
+
 const submitSchedule = async () => {
   error.value = '';
+  
+  if (!selectedProjectId.value) {
+    error.value = 'Selecione um projeto.';
+    return;
+  }
+
   loading.value = true;
   
   try {
@@ -82,7 +114,7 @@ const submitSchedule = async () => {
     const scheduledAt = new Date(localDateTimeStr).toISOString();
 
     await meetingsStore.scheduleMeeting({
-      project_id: props.projectId,
+      project_id: selectedProjectId.value,
       analyst_id: authStore.email, // Passing username/email or default ID
       title: title.value,
       scheduled_at: scheduledAt
@@ -149,7 +181,7 @@ label {
   color: #94a3b8;
 }
 
-input {
+input, select {
   width: 100%;
   padding: 0.75rem 1rem;
   border-radius: 8px;

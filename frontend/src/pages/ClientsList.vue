@@ -204,7 +204,7 @@ const getStatusClass = (status) => {
 
 .main-content {
   padding: 2.5rem;
-  max-width: 1200px;
+  max-width: fit-content;
   margin: 0 auto;
 }
 

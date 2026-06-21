@@ -25,3 +25,7 @@ frontend/build/
 .env*
 !.env.example
 .local
+
+# Dev / Scratchpad scripts
+backend/query*.go
+backend/reset_pwd.go
