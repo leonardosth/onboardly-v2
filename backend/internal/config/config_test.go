@@ -58,7 +58,7 @@ func TestLoadConfig_Overrides(t *testing.T) {
 
 	// Set custom environment variables
 	os.Setenv("PORT", "9090")
-	os.Setenv("DATABASE_URL", "postgresql://postgres:Pelopes818*@localhost:5433/onboardlyv2?sslmode=disable")
+	os.Setenv("DATABASE_URL", "postgresql://testuser:testpass123@localhost:5433/onboardlyv2_test?sslmode=disable")
 	os.Setenv("JWT_SECRET", "custom-jwt-secret")
 	os.Setenv("WEBHOOK_TOKEN", "custom-webhook-token")
 
@@ -67,7 +67,7 @@ func TestLoadConfig_Overrides(t *testing.T) {
 	if cfg.Port != "9090" {
 		t.Errorf("Expected Port to be '9090', got '%s'", cfg.Port)
 	}
-	expectedDB := "postgresql://postgres:Pelopes818*@localhost:5433/onboardlyv2?sslmode=disable"
+	expectedDB := "postgresql://testuser:testpass123@localhost:5433/onboardlyv2_test?sslmode=disable"
 	if cfg.DatabaseURL != expectedDB {
 		t.Errorf("Expected DatabaseURL to be '%s', got '%s'", expectedDB, cfg.DatabaseURL)
 	}

@@ -1,0 +1,245 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\title{Relatório de Análise de Qualidade de Software\\
+\large Ferramenta SonarQube Community no Projeto Onboardly V2}
+\author{Estudante de Engenharia de Software}
+\date{28 de Junho de 2026}
+
+\begin{document}
+
+\maketitle
+\newpage
+\tableofcontents
+\newpage
+
+\section{Identificação do Projeto}
+
+\subsection{Nome do Projeto}
+\textbf{Onboardly V2}
+
+\subsection{Objetivo do Sistema/Aplicação}
+O Onboardly V2 é uma plataforma interativa e responsiva projetada para o gerenciamento de implantações (deployments) e o processo de integração operacional de novos clientes (onboarding). O sistema visa mitigar a fricção comum durante o início da jornada do cliente, fornecendo ferramentas como:
+\begin{itemize}
+    \item \textbf{Dashboard de Métricas:} Monitoramento em tempo real de KPIs de sucesso, como quantidade de clientes ativos, taxas de go-live, andamento de implantações e log de auditorias recentes.
+    \item \textbf{Gestão de Clientes e Projetos:} Fluxo de controle de estados operacionais (Backlog, Em andamento, Go-Live).
+    \item \textbf{Calendário Interativo de Sincronia:} Agendamento de reuniões técnicas integradas com visualizações dinâmicas mensais e semanais.
+    \item \textbf{Integração via Webhooks:} Sincronização automatizada e importação de clientes de ferramentas terceiras (Zapier, Make, Google Sheets).
+\end{itemize}
+
+\subsection{Tecnologias Utilizadas}
+A arquitetura baseia-se em um modelo Cliente-Servidor desacoplado com as seguintes tecnologias principais:
+\begin{itemize}
+    \item \textbf{Backend:} Linguagem Go (Golang) v1.22+, utilizando o roteador HTTP leve \texttt{go-chi/chi} e o driver PostgreSQL nativo de alta performance \texttt{pgx}. A autenticação é realizada de forma stateless via JSON Web Tokens (JWT).
+    \item \textbf{Frontend:} Single Page Application (SPA) construída em Vue.js 3 (Composition API) assistido pelo bundler Vite, gerenciamento de estado global com Pinia, roteamento com Vue Router e integração assíncrona via Axios.
+    \item \textbf{Banco de Dados:} PostgreSQL relacional para persistência transacional com suporte a chaves estrangeiras e integridade referencial estrita.
+\end{itemize}
+
+\section{Configuração da Análise}
+
+A análise do código-fonte do projeto Onboardly V2 foi configurada localmente para identificar débitos técnicos, complexidades desnecessárias e potenciais riscos à segurança da informação. A configuração adotou os seguintes parâmetros:
+
+\begin{itemize}
+    \item \textbf{Versão do SonarQube Utilizada:} SonarQube Community Build v26.6.0.123539.
+    \item \textbf{Linguagens de Programação Analisadas:} Go (Golang) no backend e JavaScript, HTML, CSS e componentes de template Vue no frontend.
+    \item \textbf{Forma de Execução da Análise:} Execução local do Sonar Scanner orquestrada via utilitário Node Package Execute (\texttt{npx sonarqube-scanner}), que realiza a carga do arquivo de configuração do projeto \texttt{sonar-project.properties} e transfere a análise para a instância local do SonarQube rodando na porta 9000.
+    \item \textbf{Data da Análise:} 28 de Junho de 2026.
+\end{itemize}
+
+\section{Resultados Obtidos}
+
+\subsection{Visão Geral (Overview)}
+O SonarQube submeteu o projeto ao perfil padrão de avaliação (Quality Gate). Os resultados consolidados na visão geral de análise apresentam as seguintes métricas globais:
+
+\begin{figure}[H]
+    \centering
+    \label{fig:overview}
+    \caption{Tela de Visão Geral (Overview) do SonarQube para o Projeto Onboardly.}
+    % NOTA: O usuário poderá substituir ou inserir a imagem em PDF/PNG correspondente.
+    % \includegraphics[width=\textwidth]{overview.png}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Quality Gate:} \textbf{Passed} (Aprovado).
+    \item \textbf{Reliability (Confiabilidade):} Classificação \textbf{E} (Rating mais baixo de confiabilidade), indicando a existência de bugs urgentes no código analisado.
+    \item \textbf{Security (Segurança):} Classificação \textbf{B} (Rating satisfatório de vulnerabilidades ativas), contudo o projeto recebeu a classificação \textbf{E} em relação ao fechamento de Security Hotspots.
+    \item \textbf{Maintainability (Manutenibilidade):} Classificação \textbf{A} (Rating excelente), evidenciando uma densidade muito baixa de débito técnico em relação ao tamanho total da aplicação.
+    \item \textbf{Coverage (Cobertura de Testes):} \textbf{0.0\%} de testes unitários ou de integração executados e integrados com relatórios do Sonar.
+    \item \textbf{Duplications (Duplicações):} \textbf{0.0\%} de código duplicado.
+\end{itemize}
+
+\subsection{Métricas Coletadas}
+
+A Tabela~\ref{tab:metricas} sintetiza as métricas exatas obtidas nos painéis do SonarQube:
+
+\begin{table}[H]
+    \centering
+    \caption{Métricas de Qualidade Obtidas no SonarQube}
+    \label{tab:metricas}
+    \begin{tabular}{lr}
+        \toprule
+        \textbf{Métrica} & \textbf{Valor Encontrado} \\
+        \midrule
+        Linhas de Código (Lines of Code) & 25.999 \\
+        Cobertura de Testes (Coverage) & 0.0\% \\
+        Complexidade Ciclomática (Complexity) & 7.436 \\
+        Complexidade Cognitiva (Cognitive Complexity) & 11.023 \\
+        Duplicação de Código (Duplications) & 0.0\% \\
+        Bugs (Reliability Issues) & 15 \\
+        Vulnerabilidades (Security Issues) & 1 \\
+        Security Hotspots & 7 \\
+        Code Smells (Maintainability Issues) & 1.949 \\
+        Dívida Técnica (Technical Debt) & 27 dias \\
+        Maintainability Rating (Índice de Manutenibilidade) & Rating A (1.7\% Ratio) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{Análise dos Problemas Encontrados}
+
+Nesta seção, realizamos uma investigação pontual de problemas apontados nas três áreas fundamentais analisadas pelo SonarQube.
+
+\subsection{Code Smells Selecionados}
+
+\subsubsection{Code Smell 1: Alta Complexidade Cognitiva no Método Seed}
+\begin{itemize}
+    \item \textbf{Arquivo Afetado:} \texttt{backend/cmd/seed/main.go} (Linha 14)
+    \item \textbf{Trecho do Código:}
+\begin{lstlisting}[language=Go]
+func main() {
+    err := godotenv.Load(".env")
+    // ...
+    // Leitura de variaveis de ambiente
+    // Limpeza de tabelas no banco de dados
+    // Seed de usuarios, clientes e criacao de maps inline
+    // Seed de projetos e iteracoes encadeadas
+    // Seed de reunioes
+}
+\end{lstlisting}
+    \item \textbf{Mensagem do SonarQube:} \textit{``Refactor this method to reduce its Cognitive Complexity from 16 to the 15 allowed.''}
+    \item \textbf{Explicação Técnica:} A complexidade cognitiva avalia o nível de dificuldade na leitura e entendimento do fluxo do código por programadores. A função \texttt{main} do script de semente agrupa múltiplos blocos lógicos estruturados inline, loops aninhados para criação de relacionamentos no banco, closures locais como a função utilitária \texttt{parseTime} e verificação excessiva de erros sequenciais sem delegação de escopo.
+    \item \textbf{Impacto Operacional:} Reduz expressivamente a legibilidade do código. A manutenção do arquivo para introduzir novas tabelas ou cenários de teste torna-se complexa e propensa a erros pela ausência de modularização.
+\end{itemize}
+
+\subsubsection{Code Smell 2: Duplicação de String Literal no Roteamento da API}
+\begin{itemize}
+    \item \textbf{Arquivo Afetado:} \texttt{backend/internal/api/router.go} (Linhas 49, 51 e 54)
+    \item \textbf{Trecho do Código:}
+\begin{lstlisting}[language=Go]
+r.Get("/clients/{id}", client.GetClientHandler)
+r.Put("/clients/{id}", client.UpdateClientHandler)
+r.With(auth.RequireRole("Admin")).Delete("/clients/{id}", client.DeleteClientHandler)
+\end{lstlisting}
+    \item \textbf{Mensagem do SonarQube:} \textit{``Define a constant instead of duplicating this literal "/clients/{id}" 3 times.''}
+    \item \textbf{Explicação Técnica:} Repetir strings idênticas no código-fonte introduz risco de acoplamento rígido de valor literal e viola a filosofia DRY (Don't Repeat Yourself).
+    \item \textbf{Impacto Operacional:} Caso ocorra uma mudança estrutural na URL base dos endpoints de detalhe do cliente (por exemplo, alteração de \texttt{/clients/\{id\}} para \texttt{/accounts/\{id\}}), o desenvolvedor deverá lembrar-se de atualizar manualmente todas as instâncias da string espalhadas no arquivo, o que abre margem para inconsistências em produção.
+\end{itemize}
+
+\subsubsection{Code Smell 3: Falsos Positivos nos Diretórios de Build Cache do Frontend}
+\begin{itemize}
+    \item \textbf{Arquivo Afetado:} \texttt{frontend/.vite/deps\_temp\_1a8e1e14/axios.js} (Linhas 13 e 36)
+    \item \textbf{Mensagem do SonarQube:} \textit{``Unexpected var, use let or const instead''} e \textit{``Prefer using an optional chain expression instead...''}
+    \item \textbf{Explicação Técnica:} O SonarQube está analisando por padrão todos os subdiretórios presentes no diretório raiz \texttt{frontend}, inclusive a pasta \texttt{.vite}, que armazena os arquivos de build temporário e cache gerados de forma automatizada pelo bundler. 
+    \item \textbf{Impacto Operacional:} Polui as métricas do painel do SonarQube. Os desenvolvedores são apresentados a Code Smells em arquivos que eles não criaram e não devem manter. Isso infla artificialmente o indicador de Dívida Técnica (representando uma porção expressiva dos 1.949 Code Smells encontrados).
+\end{itemize}
+
+\subsection{Problema de Segurança Selecionado}
+
+\subsubsection{Segurança 1: Ausência de Subresource Integrity (SRI) em Recurso Remoto}
+\begin{itemize}
+    \item \textbf{Arquivo Afetado:} \texttt{frontend/index.html} (Linha 11)
+    \item \textbf{Trecho do Código:}
+\begin{lstlisting}[language=HTML]
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+\end{lstlisting}
+    \item \textbf{Mensagem do SonarQube (Vulnerability - Rating B):} \textit{``Make sure not using resource integrity feature is safe here. Remote artifacts should not be used without integrity checks Web:S5725''}
+    \item \textbf{Explicação Técnica:} O SonarQube identificou o carregamento de uma folha de estilo externa (Google Fonts) sem a utilização do atributo \texttt{integrity} (Subresource Integrity - SRI). O SRI permite que o navegador realize a validação criptográfica (usando hashes como SHA-384 ou SHA-512) do arquivo baixado contra o hash declarado pelo desenvolvedor.
+    \item \textbf{Impacto Operacional:} Caso o provedor de CDN de terceiros (ou a própria infraestrutura do Google Fonts) seja comprometido por um invasor, o código da folha de estilo pode ser silenciosamente substituído por um arquivo malicioso. Em um cenário extremo, folhas de estilo adulteradas podem ser manipuladas para ocultar elementos legítimos da interface, exibir mensagens falsas de phishing ou capturar cliques (Clickjacking).
+\end{itemize}
+
+\subsection{Problema de Complexidade/Duplicação Selecionado}
+
+\subsubsection{Complexidade: Estouro do Limite de Complexidade Cognitiva}
+\begin{itemize}
+    \item \textbf{Arquivo Afetado:} \texttt{backend/cmd/seed/main.go} (Linha 14)
+    \item \textbf{Explicação Técnica:} O método de análise identificou que o encadeamento inline de queries de banco de dados junto com arrays e structs customizados elevou a complexidade cognitiva global a 16. O limite padrão adotado pela ferramenta é 15.
+    \item \textbf{Impacto Operacional:} Programadores terão grande dificuldade de compreender as relações do banco ao tentar escrever sementes de teste para novos casos de uso de onboarding.
+\end{itemize}
+
+\section{Plano de Correção}
+
+Esta seção propõe as ações corretivas de engenharia para cada um dos problemas identificados na seção anterior, classificadas por prioridade técnica.
+
+\subsection{Ações Propostas}
+
+\begin{table}[H]
+    \centering
+    \caption{Plano de Correção de Dívidas e Vulnerabilidades}
+    \label{tab:plano}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{lp{6cm}p{5cm}c}
+        \toprule
+        \textbf{Problema} & \textbf{Ação de Correção} & \textbf{Melhoria Obtida} & \textbf{Prioridade} \\
+        \midrule
+        Ausência de SRI & Hospedar a fonte \textit{Inter} localmente nos assets do projeto ou computar e adicionar o hash do atributo \texttt{integrity} correspondente. & Garante que o navegador rejeitará o recurso caso a fonte externa seja modificada na origem. & \textbf{Alta} \\
+        \midrule
+        Falsos Positivos & Adicionar a pasta de cache do Vite \texttt{frontend/.vite} e pastas de build nas exclusões (\texttt{sonar.exclusions}) do SonarQube. & Limpeza das métricas do painel, focando apenas no código-fonte útil. & \textbf{Alta} \\
+        \midrule
+        Duplicação de Rota & Definir a constante \texttt{const clientIDRoute = "/clients/\{id\}"} no topo do pacote de roteamento e utilizá-la nos locais redundantes. & Facilidade de manutenção futura caso as rotas sejam alteradas. & \textbf{Média} \\
+        \midrule
+        Complexidade no Seed & Quebrar a função \texttt{main} do script de seed em subfunções menores especializadas (ex: \texttt{seedUsers()}, \texttt{seedClients()}). & Melhor legibilidade do código de suporte e testes. & \textbf{Baixa} \\
+        \bottomrule
+    \end{tabular}
+    }
+\end{table}
+
+\section{Conclusão}
+
+\subsection{Utilidade do SonarQube}
+A aplicação da análise do SonarQube Community no Onboardly V2 provou ser uma estratégia de extrema relevância no ciclo de desenvolvimento. Ela permitiu diagnosticar problemas de qualidade invisíveis nas revisões de código tradicionais rápidas, em especial no mapeamento de dependências vulneráveis sem subresource integrity no frontend e acúmulo desnecessário de complexidade em fluxos auxiliares.
+
+\subsection{Métricas Consideradas Relevantes}
+\begin{itemize}
+    \item \textbf{Quality Gate e Dívida Técnica (Debt):} O painel indicando 27 dias de esforço estimado ajudou a visualizar a necessidade de refatorações de arquitetura.
+    \item \textbf{Security Vulnerabilities:} Identificar o carregamento inseguro de recursos remotos sem integridade de hash blinda o cliente final contra possíveis envenenamentos de CDN.
+    \item \textbf{Cognitive Complexity:} Serviu como régua para forçar a delegação de responsabilidades e criação de funções menores e mais testáveis.
+\end{itemize}
+
+\subsection{Considerações Finais}
+Embora o projeto tenha obtido aprovação no Quality Gate padrão (Passed), a nota E em Confiabilidade e o registro de 15 Bugs reais e 7 Hotspots de segurança demonstram que a aprovação inicial não significa código pronto para produção. O uso continuado da ferramenta no pipeline de Integração Contínua (CI) é recomendado para bloquear a integração de novos débitos técnicos antes do Go-Live dos sistemas.
+
+\end{document}
